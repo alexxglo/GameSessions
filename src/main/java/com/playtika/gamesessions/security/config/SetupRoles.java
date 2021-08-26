@@ -37,12 +37,25 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
 
         // == create initial roles
         final Role adminRole = createRoleIfNotFound(RoleType.ROLE_ADMIN.name());
-        createRoleIfNotFound(RoleType.ROLE_USER.name());
-        createRoleIfNotFound(RoleType.ROLE_MANAGER.name());
-
+        final Role userRole = createRoleIfNotFound(RoleType.ROLE_USER.name());
+        final Role managerRole = createRoleIfNotFound(RoleType.ROLE_MANAGER.name());
         // == create initial user
         createUserIfNotFound("admin@test.com", "admin", "Admin",
                 "Admin", "1234", new ArrayList<>(Arrays.asList(adminRole)));
+
+        createUserIfNotFound("admina@test.com", "admina", "Admina",
+                "Admina", "12334", new ArrayList<>(Arrays.asList(adminRole)));
+
+        createUserIfNotFound("tester@test.com", "tester", "Tester",
+                "Tester", "12313145", new ArrayList<>(Arrays.asList(userRole)));
+        createUserIfNotFound("qa@test.com", "qa", "QA",
+                "QA", "1111", new ArrayList<>(Arrays.asList(userRole)));
+        createUserIfNotFound("hr@test.com", "hr", "HR",
+                "HR", "hrhr", new ArrayList<>(Arrays.asList(managerRole)));
+        createUserIfNotFound("po@test.com", "PO", "PO",
+                "PO", "popo", new ArrayList<>(Arrays.asList(managerRole)));
+        createUserIfNotFound("scrum@test.com", "scrum", "scrum",
+                "scrum", "scrumscrum", new ArrayList<>(Arrays.asList(userRole)));
 
         setupComplete = true;
     }

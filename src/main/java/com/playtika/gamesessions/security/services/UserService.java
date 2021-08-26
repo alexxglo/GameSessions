@@ -2,6 +2,7 @@ package com.playtika.gamesessions.security.services;
 
 import com.playtika.gamesessions.exceptions.MyCustomException;
 import com.playtika.gamesessions.security.dto.LoginResponse;
+import com.playtika.gamesessions.security.dto.PatchUser;
 import com.playtika.gamesessions.security.dto.SignUpRequest;
 import com.playtika.gamesessions.security.dto.UserDTO;
 import com.playtika.gamesessions.security.models.Role;
@@ -9,6 +10,7 @@ import com.playtika.gamesessions.security.models.RoleType;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.repositories.UserRepository;
+import org.hibernate.NonUniqueObjectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -140,4 +143,58 @@ public class UserService implements UserDetailsService {
         return jwtTokenService.createToken(userName, userRepository.findByUsername(userName).getRoles());
     }
 
+    public User getUserById(long id) {
+        return userRepository.getById(id);
+    }
+
+    private User updateUser(PatchUser patchUser, User userToUpdate) {
+
+        if(patchUser.getEmail() != null) {
+            userToUpdate.setEmail(patchUser.getEmail());
+        }
+        if(patchUser.getPassword() != null) {
+            userToUpdate.setPassword(patchUser.getPassword());
+        }
+        if(patchUser.getUserName() != null) {
+            userToUpdate.setUsername(patchUser.getUserName());
+        }
+        return userToUpdate;
+    }
+    private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
+        RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
+        RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
+        if(requestUserRole.getRoleLevel() >= updatedUserRole.getRoleLevel()) {
+            return true;
+        }
+        return false;
+    }
+
+    public User updateUserById(PatchUser patchUser, long id, String username) { //TODO add update roles
+        Optional<User> user = userRepository.findById(id);
+        System.out.println("User that updates another user: " + username);
+        if(user.isPresent()) {
+            User userToUpdate = userRepository.getById(id);
+            User requestUser = userRepository.findByUsername(username);
+            if(verifyRoleLevel(userToUpdate, requestUser)) {
+                User userUpdated = updateUser(patchUser, userToUpdate);
+                try {
+                    return userRepository.saveAndFlush(userUpdated);
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    public User updateUserSelf(PatchUser patchUser, String username) {
+        User userToUpdate = userRepository.findByUsername(username);
+        User userUpdated = updateUser(patchUser, userToUpdate);
+        try {
+            return userRepository.saveAndFlush(userUpdated);
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
 }
