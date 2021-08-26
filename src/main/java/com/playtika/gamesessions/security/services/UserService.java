@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -169,21 +170,29 @@ public class UserService implements UserDetailsService {
         RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
         boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
         boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
-        System.out.println("Equal levels" + equalRoleLevels);
-        System.out.println("Role is admin " + roleIsAdmin);
         if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
             return true;
         }
         else if(equalRoleLevels && roleIsAdmin) {
-            System.out.println("yes");
             return true;
         }
         return false;
     }
 
-    public User updateUserById(PatchUser patchUser, long id, String username) { //TODO add update roles
+    private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
+        List<Role> roles = new ArrayList<>();
+        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
+        if(roles == null) {
+            throw new IllegalArgumentException();
+        }
+        return roles;
+        }
+
+    @Transactional
+    public User updateUserById(PatchUser patchUser, long id, String username) {
         Optional<User> user = userRepository.findById(id);
-        System.out.println("User that updates another user: " + username);
+        List<Role> roles = addCorrectRolesFromJSON(patchUser);
+        patchUser.setRoles(roles);
         if(user.isPresent()) {
             User userToUpdate = userRepository.getById(id);
             User requestUser = userRepository.findByUsername(username);
@@ -192,7 +201,7 @@ public class UserService implements UserDetailsService {
                 try {
                     return userRepository.saveAndFlush(userUpdated);
                 } catch (Exception e) {
-                    System.out.println("Shit");
+
                     return null;
                 }
             }
