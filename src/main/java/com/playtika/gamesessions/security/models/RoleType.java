@@ -21,4 +21,14 @@ public enum RoleType  {
         }
         return ROLE_USER;
     }
+
+    public static String RoleTypeToString(RoleType role) {
+        if(ROLE_ADMIN.toString().equals(role.toString())) {
+            return "ROLE_ADMIN";
+        }
+        if(ROLE_MANAGER.toString().equals(role.toString())) {
+            return "ROLE_MANAGER";
+        }
+        return "ROLE_USER";
+    }
 }

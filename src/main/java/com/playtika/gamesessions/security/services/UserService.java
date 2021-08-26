@@ -158,12 +158,24 @@ public class UserService implements UserDetailsService {
         if(patchUser.getUserName() != null) {
             userToUpdate.setUsername(patchUser.getUserName());
         }
+        if(patchUser.getRoles() != null) {
+            System.out.println(patchUser.getRoles().get(0).getName());
+            userToUpdate.setRoles(patchUser.getRoles());
+        }
         return userToUpdate;
     }
     private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
         RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
         RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
-        if(requestUserRole.getRoleLevel() >= updatedUserRole.getRoleLevel()) {
+        boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
+        boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
+        System.out.println("Equal levels" + equalRoleLevels);
+        System.out.println("Role is admin " + roleIsAdmin);
+        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
+            return true;
+        }
+        else if(equalRoleLevels && roleIsAdmin) {
+            System.out.println("yes");
             return true;
         }
         return false;
@@ -180,6 +192,7 @@ public class UserService implements UserDetailsService {
                 try {
                     return userRepository.saveAndFlush(userUpdated);
                 } catch (Exception e) {
+                    System.out.println("Shit");
                     return null;
                 }
             }
