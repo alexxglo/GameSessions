@@ -1,11 +1,15 @@
 package com.playtika.gamesessions.security.dto;
 
 import com.playtika.gamesessions.security.models.Role;
+import com.playtika.gamesessions.security.models.RoleType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SignUpRequest {
     private String userName;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
     private List<Role> roles;
@@ -40,5 +44,21 @@ public class SignUpRequest {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 }

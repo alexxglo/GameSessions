@@ -38,6 +38,7 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
         // == create initial roles
         final Role adminRole = createRoleIfNotFound(RoleType.ROLE_ADMIN.name());
         createRoleIfNotFound(RoleType.ROLE_USER.name());
+        createRoleIfNotFound(RoleType.ROLE_MANAGER.name());
 
         // == create initial user
         createUserIfNotFound("admin@test.com", "admin", "Admin",

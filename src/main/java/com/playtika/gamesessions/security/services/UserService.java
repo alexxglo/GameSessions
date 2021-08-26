@@ -4,7 +4,10 @@ import com.playtika.gamesessions.exceptions.MyCustomException;
 import com.playtika.gamesessions.security.dto.LoginResponse;
 import com.playtika.gamesessions.security.dto.SignUpRequest;
 import com.playtika.gamesessions.security.dto.UserDTO;
+import com.playtika.gamesessions.security.models.Role;
+import com.playtika.gamesessions.security.models.RoleType;
 import com.playtika.gamesessions.security.models.User;
+import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,6 +41,9 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     //required by the UserDetailsService
     @Override
@@ -58,6 +65,13 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
+
+    private List<Role> initialUserRole() {
+        Role role = roleRepository.findByName(RoleType.ROLE_USER.toString());
+        List<Role> roles = new ArrayList<>();
+        roles.add(role);
+        return roles;
+    }
 
     public LoginResponse login(String userName, String password) {
         try {
@@ -87,7 +101,9 @@ public class UserService implements UserDetailsService {
         user.setUsername(request.getUserName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
-        user.setRoles(request.getRoles());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setRoles(initialUserRole());
         request.setPassword(user.getPassword());
 
         userRepository.save(user);
