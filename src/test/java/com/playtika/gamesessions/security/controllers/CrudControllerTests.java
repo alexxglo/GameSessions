@@ -61,9 +61,9 @@ public class CrudControllerTests {
         mockedResponse.setEmail("test@test");
         mockedResponse.setAccessToken("1231245125");
         when(userService.login(anyString(),anyString())).thenReturn(null);
-        mockMvc.perform(post("/login")).andExpect(status().isFound());
-//                .andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$.userName").value("test"));
+        mockMvc.perform(post("/login"))
+                .andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.userName").value("test"));
     }
 
     @Test
