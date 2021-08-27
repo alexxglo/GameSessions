@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity<LoginResponse> login(HttpServletRequest requestHeader, @RequestBody LoginRequest request) throws RuntimeException {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws RuntimeException {
 
         LoginResponse loginResponse = userService.login(request.getUserName(), request.getPassword());
         if(loginResponse == null){
@@ -54,11 +54,13 @@ public class UserController {
         }
     }
 
-    @DeleteMapping(value = "/delete")
+    @DeleteMapping(value = "/delete", params = {"userName"})
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
     public ResponseEntity<String> deleteUser(@RequestParam String userName) throws RuntimeException {
         try {
-            userService.removeUser(userName);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String requsterUsername = auth.getName();
+                userService.removeUser(userName, requsterUsername);
         } catch (Exception e) {
             throw e;
         }

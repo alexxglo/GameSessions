@@ -10,7 +10,6 @@ import com.playtika.gamesessions.security.models.RoleType;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.repositories.UserRepository;
-import org.hibernate.NonUniqueObjectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,6 @@ public class UserService implements UserDetailsService {
     @Autowired
     private RoleRepository roleRepository;
 
-    //required by the UserDetailsService
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         final User user = userRepository.findByUsername(userName);
@@ -74,6 +72,29 @@ public class UserService implements UserDetailsService {
         Role role = roleRepository.findByName(RoleType.ROLE_USER.toString());
         List<Role> roles = new ArrayList<>();
         roles.add(role);
+        return roles;
+    }
+
+    private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
+        RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
+        RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
+        boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
+        boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
+        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
+            return true;
+        }
+        else if(equalRoleLevels && roleIsAdmin) {
+            return true;
+        }
+        return false;
+    }
+
+    private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
+        List<Role> roles = new ArrayList<>();
+        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
+        if(roles == null) {
+            throw new IllegalArgumentException();
+        }
         return roles;
     }
 
@@ -117,13 +138,17 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public void removeUser(String userName) {
+    public void removeUser(String userName, String requesterUsername) {
         if(!userRepository.existsByUsername(userName)){
             throw new RuntimeException("User doesn't exists");
         }
-        userRepository.deleteByUsername(userName);
-        logger.info("User remove successfully");
-
+        User userToDelete = userRepository.findByUsername(userName);
+        User requestUser = userRepository.findByUsername(requesterUsername);
+        if(!verifyRoleLevel(userToDelete, requestUser)) {
+            throw new RuntimeException("Role level doesn't permit removing user");
+        }
+            userRepository.deleteByUsername(userName);
+            logger.info("User removed successfully");
     }
 
     public UserDTO searchUser(String userName) {
@@ -165,30 +190,7 @@ public class UserService implements UserDetailsService {
         }
         return userToUpdate;
     }
-    private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
-        RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
-        RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
-        boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
-        boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
-        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
-            return true;
-        }
-        else if(equalRoleLevels && roleIsAdmin) {
-            return true;
-        }
-        return false;
-    }
 
-    private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
-        List<Role> roles = new ArrayList<>();
-        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
-        if(roles == null) {
-            throw new IllegalArgumentException();
-        }
-        return roles;
-        }
-
-    @Transactional
     public User updateUserById(PatchUser patchUser, long id, String username) {
         Optional<User> user = userRepository.findById(id);
         List<Role> roles = addCorrectRolesFromJSON(patchUser);
