@@ -1,7 +1,9 @@
 package com.playtika.gamesessions.security.dto;
 
 public class LoginRequest {
+
     private String userName;
+
     private String password;
 
     public String getUserName() {
@@ -19,4 +21,5 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
 }

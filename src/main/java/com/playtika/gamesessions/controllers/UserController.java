@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/register")
-    public ResponseEntity<User> signUp(HttpServletRequest requestHeader, @RequestBody SignUpRequest request) throws RuntimeException {
+    public ResponseEntity<User> signUp(@RequestBody SignUpRequest request) throws RuntimeException {
 
         User user;
         try {
@@ -110,11 +110,7 @@ public class UserController {
         if(auth.isAuthenticated()) {
             String username = auth.getName();
             User user = userService.updateUserSelf(patchUser, username);
-            if (user == null) {
-                return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
-            } else {
                 return new ResponseEntity<>(user, HttpStatus.OK);
-            }
         }
         else {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);

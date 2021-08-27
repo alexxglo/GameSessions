@@ -170,7 +170,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User getUserById(long id) {
-        return userRepository.getById(id);
+        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException());
     }
 
     private User updateUser(PatchUser patchUser, User userToUpdate) {
@@ -184,8 +184,7 @@ public class UserService implements UserDetailsService {
         if(patchUser.getUserName() != null) {
             userToUpdate.setUsername(patchUser.getUserName());
         }
-        if(patchUser.getRoles() != null) {
-            System.out.println(patchUser.getRoles().get(0).getName());
+        if(patchUser.getRoles().size() >= 1) {
             userToUpdate.setRoles(patchUser.getRoles());
         }
         return userToUpdate;
@@ -218,7 +217,7 @@ public class UserService implements UserDetailsService {
             return userRepository.saveAndFlush(userUpdated);
         }
         catch (Exception e) {
-            return null;
+            throw new IllegalArgumentException();
         }
     }
 }

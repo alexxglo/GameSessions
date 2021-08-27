@@ -1,5 +1,7 @@
 package com.playtika.gamesessions.security.dto;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 public class LoginResponse {
     private String userName;
     private String email;
