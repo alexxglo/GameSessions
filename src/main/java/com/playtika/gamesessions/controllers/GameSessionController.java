@@ -1,8 +1,11 @@
 package com.playtika.gamesessions.controllers;
 
+import com.playtika.gamesessions.dto.SessionDTO;
 import com.playtika.gamesessions.models.GameSession;
 import com.playtika.gamesessions.services.GameSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,9 +22,30 @@ public class GameSessionController {
         return gameSessionService.getAll();
     }
 
-    @RequestMapping("/add")
     @PostMapping
-    public GameSession add(@RequestBody GameSession gameSession) {
+    public GameSession startSession(@RequestBody SessionDTO sessionDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth.isAuthenticated()) {
+            return gameSessionService.startGame(sessionDTO, auth.getName());
+        }
         return null;
+    }
+
+    @GetMapping("/end")
+    public GameSession endSession() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth.isAuthenticated()) {
+            return gameSessionService.endGame(auth.getName());
+        }
+        return null;
+    }
+
+    @GetMapping("/info")
+    public String getCurrentSessionDuration() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth.isAuthenticated()) {
+            return gameSessionService.currentDuration(auth.getName());
+        }
+        return "No current session available";
     }
 }

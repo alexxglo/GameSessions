@@ -1,6 +1,7 @@
 package com.playtika.gamesessions.security.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.playtika.gamesessions.models.GameSession;
 
 import javax.persistence.*;
 import java.util.List;
@@ -25,7 +26,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(name = "max_daily_time")
+    private int maxDailyTime;
+
     private String password;
+
 
     @JsonIgnore
     @ManyToMany(fetch=FetchType.EAGER)
@@ -34,6 +39,9 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false))
     private List<Role> roles;
+
+    @OneToMany(mappedBy = "user")
+    private List<GameSession> gameSessions;
 
     public long getId() {
         return id;
@@ -89,5 +97,21 @@ public class User {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public List<GameSession> getGameSessions() {
+        return gameSessions;
+    }
+
+    public void setGameSessions(List<GameSession> gameSessions) {
+        this.gameSessions = gameSessions;
+    }
+
+    public int getMaxDailyTime() {
+        return maxDailyTime;
+    }
+
+    public void setMaxDailyTime(int maxDailyTime) {
+        this.maxDailyTime = maxDailyTime;
     }
 }

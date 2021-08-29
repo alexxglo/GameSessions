@@ -1,5 +1,7 @@
 package com.playtika.gamesessions.models;
 
+import com.playtika.gamesessions.security.models.User;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -17,8 +19,15 @@ public class GameSession {
     @Column(name = "start_date")
     private Date startDate;
 
+    @Column(name = "end_date")
+    private Date endDate;
+
     @Column
     private int duration;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public String getName() {
         return name;
@@ -42,5 +51,21 @@ public class GameSession {
 
     public void setDuration(int duration) {
         this.duration = duration;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 }

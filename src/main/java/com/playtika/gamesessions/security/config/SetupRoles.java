@@ -41,21 +41,21 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
         final Role managerRole = createRoleIfNotFound(RoleType.ROLE_MANAGER.name());
         // == create initial user
         createUserIfNotFound("admin@test.com", "admin", "Admin",
-                "Admin", "1234", new ArrayList<>(Arrays.asList(adminRole)));
+                "Admin", "1234", new ArrayList<>(Arrays.asList(adminRole)), 100);
 
         createUserIfNotFound("admina@test.com", "admina", "Admina",
-                "Admina", "12334", new ArrayList<>(Arrays.asList(adminRole)));
+                "Admina", "12334", new ArrayList<>(Arrays.asList(adminRole)), 200);
 
         createUserIfNotFound("tester@test.com", "tester", "Tester",
-                "Tester", "12313145", new ArrayList<>(Arrays.asList(userRole)));
+                "Tester", "12313145", new ArrayList<>(Arrays.asList(userRole)), 300);
         createUserIfNotFound("qa@test.com", "qa", "QA",
-                "QA", "1111", new ArrayList<>(Arrays.asList(userRole)));
+                "QA", "1111", new ArrayList<>(Arrays.asList(userRole)), 250);
         createUserIfNotFound("hr@test.com", "hr", "HR",
-                "HR", "hrhr", new ArrayList<>(Arrays.asList(managerRole)));
+                "HR", "hrhr", new ArrayList<>(Arrays.asList(managerRole)), 30);
         createUserIfNotFound("po@test.com", "PO", "PO",
-                "PO", "popo", new ArrayList<>(Arrays.asList(managerRole)));
+                "PO", "popo", new ArrayList<>(Arrays.asList(managerRole)), 75);
         createUserIfNotFound("scrum@test.com", "scrum", "scrum",
-                "scrum", "scrumscrum", new ArrayList<>(Arrays.asList(userRole)));
+                "scrum", "scrumscrum", new ArrayList<>(Arrays.asList(userRole)), 90);
 
         setupComplete = true;
     }
@@ -71,7 +71,8 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     @Transactional
-    User createUserIfNotFound(final String email, final String username, final String firstName, final String lastName, final String password, final List<Role> roles) {
+    User createUserIfNotFound(final String email, final String username, final String firstName, final String lastName, final String password, final List<Role> roles,
+                              int maxDailyTime) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
             user = new User();
@@ -80,6 +81,7 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
             user.setUsername(username);
             user.setPassword(passwordEncoder.encode(password));
             user.setEmail(email);
+            user.setMaxDailyTime(maxDailyTime);
         }
         user.setRoles(roles);
         user = userRepository.save(user);
