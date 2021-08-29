@@ -67,37 +67,6 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
-
-    private List<Role> initialUserRole() {
-        Role role = roleRepository.findByName(RoleType.ROLE_USER.toString());
-        List<Role> roles = new ArrayList<>();
-        roles.add(role);
-        return roles;
-    }
-
-    private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
-        RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
-        RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
-        boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
-        boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
-        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
-            return true;
-        }
-        else if(equalRoleLevels && roleIsAdmin) {
-            return true;
-        }
-        return false;
-    }
-
-    private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
-        List<Role> roles = new ArrayList<>();
-        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
-        if(roles == null) {
-            throw new IllegalArgumentException();
-        }
-        return roles;
-    }
-
     public LoginResponse login(String userName, String password) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
@@ -173,23 +142,6 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException());
     }
 
-    private User updateUser(PatchUser patchUser, User userToUpdate) {
-
-        if(patchUser.getEmail() != null) {
-            userToUpdate.setEmail(patchUser.getEmail());
-        }
-        if(patchUser.getPassword() != null) {
-            userToUpdate.setPassword(patchUser.getPassword());
-        }
-        if(patchUser.getUserName() != null) {
-            userToUpdate.setUsername(patchUser.getUserName());
-        }
-        if(patchUser.getRoles().size() >= 1) {
-            userToUpdate.setRoles(patchUser.getRoles());
-        }
-        return userToUpdate;
-    }
-
     public User updateUserById(PatchUser patchUser, long id, String username) {
         Optional<User> user = userRepository.findById(id);
         List<Role> roles = addCorrectRolesFromJSON(patchUser);
@@ -207,6 +159,7 @@ public class UserService implements UserDetailsService {
                 }
             }
         }
+
         return null;
     }
 
@@ -219,5 +172,52 @@ public class UserService implements UserDetailsService {
         catch (Exception e) {
             throw new IllegalArgumentException();
         }
+    }
+
+    private List<Role> initialUserRole() {
+        Role role = roleRepository.findByName(RoleType.ROLE_USER.toString());
+        List<Role> roles = new ArrayList<>();
+        roles.add(role);
+        return roles;
+    }
+
+    private boolean verifyRoleLevel(User userToUpdate, User requestUser) {
+        RoleType updatedUserRole = RoleType.stringToRoleType(userToUpdate.getRoles().get(0).getName());
+        RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
+        boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
+        boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
+        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
+            return true;
+        }
+        else if(equalRoleLevels && roleIsAdmin) {
+            return true;
+        }
+        return false;
+    }
+
+    private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
+        List<Role> roles = new ArrayList<>();
+        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
+        if(roles == null) {
+            throw new IllegalArgumentException();
+        }
+        return roles;
+    }
+
+    private User updateUser(PatchUser patchUser, User userToUpdate) {
+
+        if(patchUser.getEmail() != null) {
+            userToUpdate.setEmail(patchUser.getEmail());
+        }
+        if(patchUser.getPassword() != null) {
+            userToUpdate.setPassword(patchUser.getPassword());
+        }
+        if(patchUser.getUserName() != null) {
+            userToUpdate.setUsername(patchUser.getUserName());
+        }
+        if(patchUser.getRoles().size() >= 1) {
+            userToUpdate.setRoles(patchUser.getRoles());
+        }
+        return userToUpdate;
     }
 }
