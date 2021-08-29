@@ -89,6 +89,7 @@ public class LoginTests {
         when(mockedUser.getPassword()).thenReturn("pwd");
         when(mockedUser.getRoles()).thenReturn(roles);
 
+
         return mockedUser;
     }
 
@@ -259,6 +260,7 @@ public class LoginTests {
         when(patchUser.getRoles()).thenReturn(roles);
 
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
+        when(userRepository.saveAndFlush(any())).thenReturn(user);
 
         assertThat(userService.updateUserSelf(patchUser, user.getUsername()).getUsername()).isEqualTo(user.getUsername());
     }
@@ -281,6 +283,7 @@ public class LoginTests {
         when(roleRepository.findByName(patchUser.getRoles().get(0).getName())).thenReturn(role);
         when(userRepository.getById(id)).thenReturn(user);
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
+        when(userRepository.saveAndFlush(any())).thenReturn(user);
 
         assertThat(userService.updateUserById(patchUser,id,user.getUsername()).getEmail()).isEqualTo(user.getEmail());
     }
