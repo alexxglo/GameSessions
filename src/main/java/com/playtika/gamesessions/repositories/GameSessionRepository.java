@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface GameSessionRepository extends JpaRepository<GameSession, Long> {
 
-    @Query(value = "SELECT * FROM game_sessions g WHERE g.end_date IS NULL AND g.user_id IS :idUser", nativeQuery = true)
+    @Query(value = "SELECT * FROM game_sessions g WHERE g.end_date IS NULL AND g.user_id = :idUser", nativeQuery = true)
     List<GameSession> getOngoingGameSessions(long idUser);
 
 }

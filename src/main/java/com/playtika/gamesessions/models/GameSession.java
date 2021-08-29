@@ -1,12 +1,13 @@
 package com.playtika.gamesessions.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.playtika.gamesessions.security.models.User;
 
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "game_session")
+@Table(name = "game_sessions")
 public class GameSession {
 
     @Id
@@ -25,6 +26,7 @@ public class GameSession {
     @Column
     private int duration;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
