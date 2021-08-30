@@ -10,7 +10,7 @@ import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.services.JwtTokenService;
 import com.playtika.gamesessions.security.services.UserService;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.Assert.*;
-@RunWith(SpringRunner.class)
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 public class CrudControllerTests {

@@ -46,27 +46,21 @@ public class GameSessionService {
     public GameSession startGame(String gameName, String username) throws SSLException, JsonProcessingException {
         GameSession gameSession = new GameSession();
         User currentUser = userRepository.findByUsername(username);
-        String gameNameReformatted = formatGameName(gameName);
-        gameNameReformatted = existsGame(gameNameReformatted);
-
-        if(gameNameReformatted == null) {
-            throw new IllegalArgumentException();
-        }
-
-        if(!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
-            throw new IllegalStateException();
-        }
-
-        gameSession.setName(gameNameReformatted);
         Date startDate = new Date();
         int minutesAlreadyPlayedToday = 0;
-        if(gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate).isPresent())
-        {
+        gameName = checkedGame(gameName);
+
+        if (gameName == null) {
+            throw new IllegalArgumentException();
+        }
+        if (!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
+            throw new IllegalStateException();
+        }
+        if (gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate).isPresent()) {
             minutesAlreadyPlayedToday = gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate).get();
         }
-        gameSession.setStartDate(startDate);
-        gameSession.setUser(currentUser);
-        if(minutesAlreadyPlayedToday > currentUser.getMaxDailyTime()) {
+        gameSession = initialSetup(gameSession, gameName, startDate, currentUser);
+        if (minutesAlreadyPlayedToday > currentUser.getMaxDailyTime()) {
             gameSessionRepository.saveAndFlush(gameSession);
             throw new OverAllocatedTimeException();
         }
@@ -78,8 +72,8 @@ public class GameSessionService {
         GameSession gameSession = new GameSession();
         User currentUser = userRepository.findByUsername(username);
 
-        if(!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
-            throw new IllegalStateException(); /*** Another game is active ***/
+        if (!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
+            throw new IllegalStateException();
         }
 
         gameSession.setName(sessionDTO.getName());
@@ -95,16 +89,14 @@ public class GameSessionService {
         boolean gameSessionsEmpty = gameSessionRepository.getOngoingGameSessions(userId).isEmpty();
         boolean multipleGameSessions = gameSessionRepository.getOngoingGameSessions(userId).size() >= 2;
 
-        if(gameSessionsEmpty || multipleGameSessions ) {
+        if (gameSessionsEmpty || multipleGameSessions) {
             throw new IllegalStateException();
-        }
-        else {
+        } else {
             GameSession gameSession = gameSessionRepository.getOngoingGameSessions(userId).get(0);
             Date endDate = new Date();
-            if(isOnSameDay(gameSession.getStartDate(), endDate)) {
+            if (isOnSameDay(gameSession.getStartDate(), endDate)) {
                 return finishNewGameSession(gameSession, endDate);
-            }
-            else {
+            } else {
                 setSecondGameSession(gameSession, endDate);
                 Date firstSessionEndDate = setEndOfDay(gameSession.getStartDate());
                 return finishNewGameSession(gameSession, firstSessionEndDate);
@@ -119,10 +111,9 @@ public class GameSessionService {
         boolean gameSessionsEmpty = gameSessionRepository.getOngoingGameSessions(userId).isEmpty();
         boolean multipleGameSessions = gameSessionRepository.getOngoingGameSessions(userId).size() >= 2;
 
-        if(gameSessionsEmpty || multipleGameSessions ) {
+        if (gameSessionsEmpty || multipleGameSessions) {
             return null;
-        }
-        else {
+        } else {
             GameSession gameSession = gameSessionRepository.getOngoingGameSessions(userId).get(0);
             Date currentEndDate = new Date();
             int currentSessionDuration = (int) getDateDiff(gameSession.getStartDate(), currentEndDate, TimeUnit.MINUTES);
@@ -141,7 +132,7 @@ public class GameSessionService {
 
 
     public String getTodayPlaytime(String username) throws AuthenticationException {
-        if(!checkAuthentication(username)) {
+        if (!checkAuthentication(username)) {
             throw new AuthenticationException();
         }
 
@@ -152,7 +143,7 @@ public class GameSessionService {
 
     private long getDateDiff(Date startDate, Date endDate, TimeUnit timeUnit) {
         long diffInMillies = endDate.getTime() - startDate.getTime();
-        return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
+        return timeUnit.convert(diffInMillies, TimeUnit.MILLISECONDS);
     }
 
     private boolean checkAuthentication(String username) {
@@ -212,6 +203,7 @@ public class GameSessionService {
         cal1.set(Calendar.SECOND, 59);
         return cal1.getTime();
     }
+
     private Date getYesterdayDate() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.DAY_OF_MONTH, (cal.get(Calendar.DAY_OF_MONTH) - 1));
@@ -221,7 +213,7 @@ public class GameSessionService {
     private String formatGameName(String gameName) {
         String[] splitedGameName = gameName.split("\\s+");
         String gameNameReformatted = new String();
-        for(String word: splitedGameName) {
+        for (String word : splitedGameName) {
             gameNameReformatted += "-";
             gameNameReformatted += word;
         }
@@ -241,10 +233,25 @@ public class GameSessionService {
                 .bodyToMono(String.class)
                 .block();
         ObjectNode node = new ObjectMapper().readValue(gameDetails, ObjectNode.class);
-        if(node.has("slug")) {
+        if (node.has("slug")) {
             System.out.println(node.get("slug"));
             return node.get("slug").asText();
         }
         return null;
+    }
+
+    private String checkedGame(String gameName) throws SSLException, JsonProcessingException {
+
+        String gameNameReformatted = formatGameName(gameName);
+        gameNameReformatted = existsGame(gameNameReformatted);
+
+        return gameNameReformatted;
+    }
+
+    private GameSession initialSetup(GameSession gameSession, String gameName, Date startDate, User currentUser) {
+        gameSession.setName(gameName);
+        gameSession.setStartDate(startDate);
+        gameSession.setUser(currentUser);
+        return gameSession;
     }
 }

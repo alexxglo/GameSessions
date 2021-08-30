@@ -9,64 +9,50 @@ import com.playtika.gamesessions.security.models.Role;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.repositories.UserRepository;
-import com.playtika.gamesessions.security.services.UserService;
-import junitparams.Parameters;
-import junitparams.converters.Nullable;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
-import junitparams.JUnitParamsRunner;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@RunWith(MockitoJUnitRunner.class)
 public class LoginTests {
 
-    @Mock
+    @MockBean
     private JwtTokenService jwtTokenService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    @Autowired
     private UserService userService;
 
-    private Authentication auth = mock(Authentication.class);
+    @Mock
+    private Authentication auth;
 
-    private AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+    @MockBean
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Mock
+    @MockBean
     private RoleRepository roleRepository;
 
-    @Mock
+    @MockBean
     private UserRepository userRepository;
 
     @Mock
@@ -115,6 +101,7 @@ public class LoginTests {
         //WHEN
         when(userRepository.findByUsername(userMock.getUsername())).thenReturn(userMock);
         when(jwtTokenService.createToken(userMock.getUsername(), userMock.getRoles())).thenReturn("OK");
+        when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userMock.getUsername(), userMock.getPassword()))).thenReturn(auth);
 
         //THEN
         assertThat(userMock.getEmail()).isSameAs(userService.login(userMock.getUsername(),userMock.getPassword()).getEmail());
@@ -160,6 +147,7 @@ public class LoginTests {
         SignUpRequest request = configureSignUpRequest();
 
         when(userRepository.existsByUsername(request.getUserName())).thenReturn(true);
+        when(userRepository.save(any())).thenReturn(null);
 
         assertThatThrownBy(() -> userService.signUp(request)).isInstanceOf(MyCustomException.class);
     }
@@ -176,19 +164,22 @@ public class LoginTests {
 
     @Test
     public void goodFlowRemoveUserTest() {
-        User user = new User();
-        user.setUsername("test");
-        user.setPassword("testpwd");
-        user.setEmail("email");
+//        User user = new User();
+//        user.setUsername("test");
+//        user.setPassword("testpwd");
+//        user.setEmail("email");
         Role role;
         List<Role> roles = new ArrayList<>();
         role = new Role();
         role.setName("ROLE_ADMIN");
         roles.add(role);
-        user.setRoles(roles);
+//        user.setRoles(roles);
         String requesterUsername = "req";
-
-        when(user.getRoles().get(0).getName()).thenReturn("ROLE_ADMIN");
+//
+        User user = configureUserMock();
+        when(user.getRoles()).thenReturn(roles);
+//        when(user.getRoles().get(0)).thenReturn();
+        when(user.getRoles().get(0).getName()).thenReturn(roles.get(0).getName());
         when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
         when(userRepository.findByUsername(requesterUsername)).thenReturn(user);
