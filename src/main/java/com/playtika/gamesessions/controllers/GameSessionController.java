@@ -105,4 +105,10 @@ public class GameSessionController {
     public GameSession getEarliestSession() {
         return queriesService.getEarliestSession();
     }
+
+    @GetMapping(value = "/custom", params = {"query"})
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public List<GameSession> getListFromSqlQuery(@RequestParam String query) {
+        return queriesService.getListFromSqlQuery(query);
+    }
 }

@@ -3,6 +3,7 @@ package com.playtika.gamesessions.repositories;
 import com.playtika.gamesessions.models.GameSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -18,4 +19,6 @@ public interface GameSessionRepository extends JpaRepository<GameSession, Long> 
     @Query(value = "SELECT SUM(duration) FROM game_sessions g WHERE g.user_id = :idUser AND DATE(start_date) = DATE(:date)", nativeQuery = true)
     Optional<Integer> getDurationOnDay(long idUser, Date date);
 
+    @Query(value = ":query", nativeQuery = true)
+    List<GameSession> getCustomQuerySessions(String query);
 }
