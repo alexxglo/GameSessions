@@ -8,6 +8,9 @@ import com.playtika.gamesessions.security.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +36,7 @@ public class GameSessionService {
         //TODO verify integrity of game name
 
         if(!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
-            return null; /*** Another game is active ***/
+            throw new IllegalStateException(); /*** Another game is active ***/
         }
 
         gameSession.setName(sessionDTO.getName());
@@ -43,6 +46,8 @@ public class GameSessionService {
         return gameSessionRepository.saveAndFlush(gameSession);
     }
 
+    //TODO if session extends to 2 days, add 2 sessions
+
     public GameSession endGame(String username) {
 
         User currentUser = userRepository.findByUsername(username);
@@ -51,7 +56,7 @@ public class GameSessionService {
         boolean multipleGameSessions = gameSessionRepository.getOngoingGameSessions(userId).size() >= 2;
 
         if(gameSessionsEmpty || multipleGameSessions ) {
-            return null;
+            throw new IllegalStateException();
         }
         else {
             GameSession gameSession = gameSessionRepository.getOngoingGameSessions(userId).get(0);
@@ -64,6 +69,7 @@ public class GameSessionService {
     }
 
     public String currentDuration(String username) {
+
         User currentUser = userRepository.findByUsername(username);
         long userId = currentUser.getId();
         boolean gameSessionsEmpty = gameSessionRepository.getOngoingGameSessions(userId).isEmpty();
@@ -81,8 +87,34 @@ public class GameSessionService {
 
     }
 
+    public String getTotalPlaytimeByDay(String username, String dateToParse) throws ParseException {
+        User currentUser = userRepository.findByUsername(username);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String dateConverted = dateToParse + " " + "00:00:00";
+        Date date = df.parse(dateConverted);
+        return String.format("You have played %d minutes on %s", gameSessionRepository.getDurationOnDay(currentUser.getId(), date), date);
+    }
+
+    //TODO check if duration > total duration allowed
+
+    public String getTodayPlaytime(String username) throws AuthenticationException {
+        if(!checkAuthentication(username)) {
+            throw new AuthenticationException();
+        }
+
+        User currentUser = userRepository.findByUsername(username);
+        Date date = new Date();
+        return String.format("Today you have played for %d minutes", gameSessionRepository.getDurationOnDay(currentUser.getId(), date));
+    }
+
     private long getDateDiff(Date startDate, Date endDate, TimeUnit timeUnit) {
         long diffInMillies = endDate.getTime() - startDate.getTime();
         return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
+    }
+
+    private boolean checkAuthentication(String username) {
+        if (username == null || username.isEmpty())
+            return false;
+        return true;
     }
 }
