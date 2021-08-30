@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GameSessionRepository extends JpaRepository<GameSession, Long> {
@@ -15,5 +16,5 @@ public interface GameSessionRepository extends JpaRepository<GameSession, Long> 
     List<GameSession> getOngoingGameSessions(long idUser);
 
     @Query(value = "SELECT SUM(duration) FROM game_sessions g WHERE g.user_id = :idUser AND DATE(start_date) = DATE(:date)", nativeQuery = true)
-    int getDurationOnDay(long idUser, Date date);
+    Optional<Integer> getDurationOnDay(long idUser, Date date);
 }

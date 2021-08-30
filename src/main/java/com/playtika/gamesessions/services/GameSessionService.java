@@ -1,5 +1,8 @@
 package com.playtika.gamesessions.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.playtika.gamesessions.dto.SessionDTO;
 import com.playtika.gamesessions.exceptions.OverAllocatedTimeException;
 import com.playtika.gamesessions.models.GameSession;
@@ -7,19 +10,20 @@ import com.playtika.gamesessions.repositories.GameSessionRepository;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import javax.naming.AuthenticationException;
-import java.text.DateFormat;
+import javax.net.ssl.SSLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 
 @Service
 public class GameSessionService {
@@ -30,24 +34,36 @@ public class GameSessionService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    private WebClientService webClientService;
+
+    private static final String API_KEY = "026aa61a92074996b999e40a57b2ba6b";
 
     public List<GameSession> getAll() {
         return gameSessionRepository.findAll();
     }
 
-    public GameSession startGame(SessionDTO sessionDTO, String username) {
+    public GameSession startGame(String gameName, String username) throws SSLException, JsonProcessingException {
         GameSession gameSession = new GameSession();
         User currentUser = userRepository.findByUsername(username);
+        String gameNameReformatted = formatGameName(gameName);
+        gameNameReformatted = existsGame(gameNameReformatted);
 
-        //TODO verify integrity of game name
-
-        if(!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
-            throw new IllegalStateException(); /*** Another game is active ***/
+        if(gameNameReformatted == null) {
+            throw new IllegalArgumentException();
         }
 
-        gameSession.setName(sessionDTO.getName());
+        if(!gameSessionRepository.getOngoingGameSessions(currentUser.getId()).isEmpty()) {
+            throw new IllegalStateException();
+        }
+
+        gameSession.setName(gameNameReformatted);
         Date startDate = new Date();
-        int minutesAlreadyPlayedToday = gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate);
+        int minutesAlreadyPlayedToday = 0;
+        if(gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate).isPresent())
+        {
+            minutesAlreadyPlayedToday = gameSessionRepository.getDurationOnDay(currentUser.getId(), startDate).get();
+        }
         gameSession.setStartDate(startDate);
         gameSession.setUser(currentUser);
         if(minutesAlreadyPlayedToday > currentUser.getMaxDailyTime()) {
@@ -202,4 +218,33 @@ public class GameSessionService {
         return cal.getTime();
     }
 
+    private String formatGameName(String gameName) {
+        String[] splitedGameName = gameName.split("\\s+");
+        String gameNameReformatted = new String();
+        for(String word: splitedGameName) {
+            gameNameReformatted += "-";
+            gameNameReformatted += word;
+        }
+        gameNameReformatted = gameNameReformatted.substring(1);
+        return gameNameReformatted;
+    }
+
+    private String existsGame(String gameName) throws SSLException, JsonProcessingException {
+
+        String url = "https://rawg.io/api/games/" + gameName + "?key=" + API_KEY;
+        String gameDetails = webClientService.getWebClient()
+                .get()
+                .uri(url)
+                .retrieve()
+                .onStatus(HttpStatus.NOT_FOUND::equals,
+                        clientResponse -> Mono.empty())
+                .bodyToMono(String.class)
+                .block();
+        ObjectNode node = new ObjectMapper().readValue(gameDetails, ObjectNode.class);
+        if(node.has("slug")) {
+            System.out.println(node.get("slug"));
+            return node.get("slug").asText();
+        }
+        return null;
+    }
 }
