@@ -116,4 +116,6 @@ public class UserController {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         }
     }
+
+    //TODO ability to change user duration
 }

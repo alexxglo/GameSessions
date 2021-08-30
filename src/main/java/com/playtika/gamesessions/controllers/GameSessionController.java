@@ -4,8 +4,6 @@ import com.playtika.gamesessions.dto.SessionDTO;
 import com.playtika.gamesessions.models.GameSession;
 import com.playtika.gamesessions.services.GameSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Role;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -64,4 +61,12 @@ public class GameSessionController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return gameSessionService.getTotalPlaytimeByDay(auth.getName(), date);
     }
+
+    @PostMapping("/custom-start")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    public GameSession startCustomSession(@RequestBody SessionDTO sessionDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return gameSessionService.customStartGame(sessionDTO, auth.getName());
+    }
+
 }
