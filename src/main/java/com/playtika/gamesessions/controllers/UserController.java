@@ -117,5 +117,11 @@ public class UserController {
         }
     }
 
-    //TODO ability to change user duration
+    @GetMapping(value = "/settings", params = {"maxPlaytime"})
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER') or hasRole('ROLE_USER')")
+    public User updatePlaytime(@RequestParam int maxPlaytime) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return userService.updatePlaytime(maxPlaytime, auth.getName());
+    }
+
 }

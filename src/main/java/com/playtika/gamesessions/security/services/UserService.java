@@ -163,6 +163,13 @@ public class UserService implements UserDetailsService {
         return null;
     }
 
+    public User updatePlaytime(int maxPlaytime, String username) {
+        if(maxPlaytime < 0) throw new IllegalArgumentException();
+        User user = userRepository.findByUsername(username);
+        user.setMaxDailyTime(maxPlaytime);
+        return userRepository.saveAndFlush(user);
+    }
+
     public User updateUserSelf(PatchUser patchUser, String username) {
         User userToUpdate = userRepository.findByUsername(username);
         User userUpdated = updateUser(patchUser, userToUpdate);
