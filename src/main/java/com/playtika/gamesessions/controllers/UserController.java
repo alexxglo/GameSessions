@@ -3,8 +3,10 @@ package com.playtika.gamesessions.controllers;
 import com.playtika.gamesessions.security.dto.*;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.services.JwtTokenService;
+import com.playtika.gamesessions.security.services.UserQueryService;
 import com.playtika.gamesessions.security.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +26,9 @@ public class UserController {
 
     @Autowired
     JwtTokenService jwtTokenService;
+
+    @Autowired
+    UserQueryService queryUserService;
 
     @GetMapping
     @RequestMapping("/login")
@@ -69,9 +74,9 @@ public class UserController {
 
     @GetMapping(value = "/users")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
-    public ResponseEntity<List<User>> getAllUser() throws RuntimeException {
+    public ResponseEntity<List<User>> getAllUser(Pageable pageable) throws RuntimeException {
         try {
-            return new ResponseEntity<>(userService.getAllUser(), HttpStatus.OK);
+            return new ResponseEntity<>(queryUserService.getAllUser(pageable), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
@@ -122,6 +127,30 @@ public class UserController {
     public User updatePlaytime(@RequestParam int maxPlaytime) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return userService.updatePlaytime(maxPlaytime, auth.getName());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
+    public User getUserById(@PathVariable long id) {
+        return queryUserService.getUserById(id);
+    }
+
+    @GetMapping(params = {"min"})
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
+    public List<User> getUsersAboveThresholdDailyTime(@RequestParam int min, Pageable pageable) {
+        return queryUserService.getUsersAboveThresholdDailyTime(min, pageable);
+    }
+
+    @GetMapping("/highest/time")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
+    public User getHighestDailyTimeUser() {
+        return queryUserService.getHighestDailyTimeUser();
+    }
+
+    @GetMapping("/lowest/time")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
+    public User getLowestDailyTimeUser() {
+        return queryUserService.getLowestDailyTimeUser();
     }
 
 }

@@ -8,6 +8,7 @@ import com.playtika.gamesessions.security.dto.*;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.services.JwtTokenService;
+import com.playtika.gamesessions.security.services.UserQueryService;
 import com.playtika.gamesessions.security.services.UserService;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -57,6 +59,9 @@ public class CrudControllerTests {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @MockBean
+    private UserQueryService queryUserService;
 
     @Test
     public void noInputLoginTest() throws Exception {
@@ -159,7 +164,8 @@ public class CrudControllerTests {
     @Test
     @WithMockUser(roles="ADMIN")
     public void getAllUsers() throws Exception {
-        when(userService.getAllUser()).thenThrow(new RuntimeException());
+        Pageable pageable = mock(Pageable.class);
+        when(queryUserService.getAllUser(pageable)).thenThrow(new RuntimeException());
         mockMvc.perform(get("/users")).andExpect(status().isNotFound());
     }
 

@@ -129,16 +129,9 @@ public class UserService implements UserDetailsService {
         return userResponse;
     }
 
-    public List<User> getAllUser() {
-        return userRepository.findAll();
-    }
 
     public String refreshToken(String userName) {
         return jwtTokenService.createToken(userName, userRepository.findByUsername(userName).getRoles());
-    }
-
-    public User getUserById(long id) {
-        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException());
     }
 
     public User updateUserById(PatchUser patchUser, long id, String username) {

@@ -17,4 +17,5 @@ public interface GameSessionRepository extends JpaRepository<GameSession, Long> 
 
     @Query(value = "SELECT SUM(duration) FROM game_sessions g WHERE g.user_id = :idUser AND DATE(start_date) = DATE(:date)", nativeQuery = true)
     Optional<Integer> getDurationOnDay(long idUser, Date date);
+
 }

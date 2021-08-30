@@ -3,8 +3,10 @@ package com.playtika.gamesessions.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playtika.gamesessions.dto.SessionDTO;
 import com.playtika.gamesessions.models.GameSession;
+import com.playtika.gamesessions.services.GameSessionQueriesService;
 import com.playtika.gamesessions.services.GameSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,10 +25,13 @@ public class GameSessionController {
     @Autowired
     GameSessionService gameSessionService;
 
+    @Autowired
+    GameSessionQueriesService queriesService;
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<GameSession> getAll() {
-        return gameSessionService.getAll();
+    public List<GameSession> getAll(Pageable pageable) {
+        return queriesService.getAll(pageable).toList();
     }
 
     @PostMapping(value = "/new", params = {"gameName"})
@@ -69,5 +74,35 @@ public class GameSessionController {
     public GameSession startCustomSession(@RequestBody SessionDTO sessionDTO) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return gameSessionService.customStartGame(sessionDTO, auth.getName());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public GameSession getGameSessionById(@PathVariable long id) {
+        return queriesService.getById(id);
+    }
+
+    @GetMapping("/alphabetical")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public List<GameSession> getSessionsSortedAlphabeticallyByGameName(Pageable pageable) {
+        return queriesService.getSessionsSortedAlphabeticallyByGameName(pageable);
+    }
+
+    @GetMapping(params = {"durationHigherThan"})
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public List<GameSession> getSessionsWithDurationHigherThanValue(int durationHigherThan, Pageable pageable) {
+        return queriesService.getSessionsWithDurationHigherThanValue(durationHigherThan, pageable);
+    }
+
+    @GetMapping("/started")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public List<GameSession> getSessionsSortedByStartDate(Pageable pageable) {
+        return queriesService.getSessionsSortedByStartDate(pageable);
+    }
+
+    @GetMapping("/earliest")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public GameSession getEarliestSession() {
+        return queriesService.getEarliestSession();
     }
 }

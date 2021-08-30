@@ -18,7 +18,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = {IllegalStateException.class})
+    @ExceptionHandler(value = {IllegalStateException.class, ArrayIndexOutOfBoundsException.class})
     protected ResponseEntity<Object> handleStateException(
             RuntimeException ex, WebRequest request) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

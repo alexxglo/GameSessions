@@ -17,6 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -57,6 +58,9 @@ public class LoginTests {
 
     @Mock
     private LoginResponse loginResponse;
+
+    @Autowired
+    private UserQueryService queryUserService;
 
     private User userMockNoData = mock(User.class);
 
@@ -212,8 +216,8 @@ public class LoginTests {
         List<User> userList = new ArrayList<>();
         userList.add(user);
         when(userRepository.findAll()).thenReturn(userList);
-
-        assertThat(userService.getAllUser()).isEqualTo(userList);
+        Pageable pageable = mock(Pageable.class);
+        assertThat(queryUserService.getAllUser(pageable)).isEqualTo(userList);
     }
 
     @Test

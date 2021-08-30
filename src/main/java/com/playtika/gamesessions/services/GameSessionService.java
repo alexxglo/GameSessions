@@ -39,9 +39,6 @@ public class GameSessionService {
 
     private static final String API_KEY = "026aa61a92074996b999e40a57b2ba6b";
 
-    public List<GameSession> getAll() {
-        return gameSessionRepository.findAll();
-    }
 
     public GameSession startGame(String gameName, String username) throws SSLException, JsonProcessingException {
         GameSession gameSession = new GameSession();
