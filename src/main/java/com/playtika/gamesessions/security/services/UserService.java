@@ -86,7 +86,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User signUp(SignUpRequest request) {
-        if(userRepository.existsByUsername(request.getUserName())){
+        if (userRepository.existsByUsername(request.getUserName())) {
             throw new MyCustomException("User already exists in system", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
@@ -110,16 +110,16 @@ public class UserService implements UserDetailsService {
 
 
     public void removeUser(String userName, String requesterUsername) {
-        if(!userRepository.existsByUsername(userName)){
+        if (!userRepository.existsByUsername(userName)) {
             throw new RuntimeException("User doesn't exists");
         }
         User userToDelete = userRepository.findByUsername(userName);
         User requestUser = userRepository.findByUsername(requesterUsername);
-        if(!verifyRoleLevel(userToDelete, requestUser)) {
+        if (!verifyRoleLevel(userToDelete, requestUser)) {
             throw new RuntimeException("Role level doesn't permit removing user");
         }
-            userRepository.deleteByUsername(userName);
-            logger.info("User removed successfully");
+        userRepository.deleteByUsername(userName);
+        logger.info("User removed successfully");
     }
 
     public UserDTO searchUser(String userName) {
@@ -139,30 +139,34 @@ public class UserService implements UserDetailsService {
 
     public User updateUserById(PatchUser patchUser, long id, String username) {
         Optional<User> user = userRepository.findById(id);
-        List<Role> roles = addCorrectRolesFromJSON(patchUser);
-        patchUser.setRoles(roles);
-        if(user.isPresent()) {
-            User userToUpdate = userRepository.getById(id);
-            User requestUser = userRepository.findByUsername(username);
-            if(verifyRoleLevel(userToUpdate, requestUser)) {
-                User userUpdated = updateUser(patchUser, userToUpdate);
-                if(patchUser.getRoles() != null) {
-                    userUpdated.setRoles(patchUser.getRoles());
-                }
-                try {
-                    return userRepository.saveAndFlush(userUpdated);
-                } catch (Exception e) {
-
-                    return null;
+        try {
+            List<Role> roles = addCorrectRolesFromJSON(patchUser);
+            patchUser.setRoles(roles);
+            if (user.isPresent()) {
+                User userToUpdate = userRepository.getById(id);
+                User requestUser = userRepository.findByUsername(username);
+                if (verifyRoleLevel(userToUpdate, requestUser)) {
+                    User userUpdated = updateUser(patchUser, userToUpdate);
+                    if (patchUser.getRoles() != null) {
+                        userUpdated.setRoles(patchUser.getRoles());
+                        try {
+                            return userRepository.saveAndFlush(userUpdated);
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    }
                 }
             }
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
         }
+
 
         return null;
     }
 
     public User updatePlaytime(int maxPlaytime, String username) {
-        if(maxPlaytime < 0) throw new IllegalArgumentException();
+        if (maxPlaytime < 0) throw new IllegalArgumentException();
         User user = userRepository.findByUsername(username);
         user.setMaxDailyTime(maxPlaytime);
         return userRepository.saveAndFlush(user);
@@ -173,8 +177,7 @@ public class UserService implements UserDetailsService {
         User userUpdated = updateUser(patchUser, userToUpdate);
         try {
             return userRepository.saveAndFlush(userUpdated);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException();
         }
     }
@@ -191,10 +194,9 @@ public class UserService implements UserDetailsService {
         RoleType requestUserRole = RoleType.stringToRoleType(requestUser.getRoles().get(0).getName());
         boolean equalRoleLevels = requestUserRole.getRoleLevel() == updatedUserRole.getRoleLevel();
         boolean roleIsAdmin = RoleType.ROLE_ADMIN.toString().equals(RoleType.RoleTypeToString(requestUserRole));
-        if(requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
+        if (requestUserRole.getRoleLevel() > updatedUserRole.getRoleLevel()) {
             return true;
-        }
-        else if(equalRoleLevels && roleIsAdmin) {
+        } else if (equalRoleLevels && roleIsAdmin) {
             return true;
         }
         return false;
@@ -202,8 +204,9 @@ public class UserService implements UserDetailsService {
 
     private List<Role> addCorrectRolesFromJSON(PatchUser patchUser) {
         List<Role> roles = new ArrayList<>();
-        roles.add(roleRepository.findByName(patchUser.getRoles().get(0).getName()));
-        if(roles == null) {
+        Role role = roleRepository.findByName(patchUser.getRoles().get(0).getName());
+        roles.add(roleRepository.findByName(role.getName()));
+        if (role == null) {
             throw new IllegalArgumentException();
         }
         return roles;
@@ -211,13 +214,13 @@ public class UserService implements UserDetailsService {
 
     private User updateUser(PatchUser patchUser, User userToUpdate) {
 
-        if(patchUser.getEmail() != null) {
+        if (patchUser.getEmail() != null) {
             userToUpdate.setEmail(patchUser.getEmail());
         }
-        if(patchUser.getPassword() != null) {
+        if (patchUser.getPassword() != null) {
             userToUpdate.setPassword(passwordEncoder.encode(patchUser.getPassword()));
         }
-        if(patchUser.getUserName() != null) {
+        if (patchUser.getUserName() != null) {
             userToUpdate.setUsername(patchUser.getUserName());
         }
 

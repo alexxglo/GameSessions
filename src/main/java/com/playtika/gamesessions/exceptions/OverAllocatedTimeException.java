@@ -9,6 +9,7 @@ public class OverAllocatedTimeException extends RuntimeException {
     public OverAllocatedTimeException() {
         super("Warning! Starting game session but it's beyond daily allocated time");
     }
+
     public OverAllocatedTimeException(String message) {
         super(message);
     }

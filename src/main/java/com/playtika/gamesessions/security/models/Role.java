@@ -7,7 +7,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "roles")
-public class Role implements GrantedAuthority{
+public class Role implements GrantedAuthority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,9 +18,10 @@ public class Role implements GrantedAuthority{
     @ManyToMany(mappedBy = "roles")
     private List<User> users;
 
-    public Role(){}
+    public Role() {
+    }
 
-    public Role(String roleType){
+    public Role(String roleType) {
         this.name = roleType;
     }
 

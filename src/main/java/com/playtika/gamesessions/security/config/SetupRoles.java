@@ -32,7 +32,7 @@ public class SetupRoles implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        if(setupComplete)
+        if (setupComplete)
             return;
 
         // == create initial roles

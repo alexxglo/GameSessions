@@ -124,8 +124,8 @@ public class GameSessionControllerTests {
 
         mockMvc.perform(post("/api/session/new")
                         .param("gameName", mockGameSession.getName()))
-                        .andExpect(status().isOk())
-                        .andExpect(result -> result.equals(mockGameSession));
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(mockGameSession));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class GameSessionControllerTests {
         Page<GameSession> gameSessionPage = new PageImpl(gameSessions);
         when(queriesService.getAll(any())).thenReturn(gameSessionPage);
 
-        mockMvc.perform(get("/api/session/","pageable"))
+        mockMvc.perform(get("/api/session/", "pageable"))
                 .andExpect(status().isOk())
                 .andExpect(result -> result.equals(gameSessions));
     }

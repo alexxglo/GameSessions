@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -32,7 +33,7 @@ public class UserController {
 
     @GetMapping
     @RequestMapping("/login")
-    public String login(){
+    public String login() {
         return "Login page";
     }
 
@@ -40,22 +41,22 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws RuntimeException {
 
         LoginResponse loginResponse = userService.login(request.getUserName(), request.getPassword());
-        if(loginResponse == null){
+        if (loginResponse == null) {
             throw new RuntimeException("Login failed. Possible cause : incorrect username/password");
-        }else{
+        } else {
             return new ResponseEntity<>(loginResponse, HttpStatus.OK);
         }
     }
 
     @PostMapping(value = "/register")
-    public ResponseEntity<User> signUp(@RequestBody SignUpRequest request) throws RuntimeException {
+    public ResponseEntity<User> signUp(@Valid @RequestBody SignUpRequest request) throws RuntimeException {
 
         User user;
         try {
             user = userService.signUp(request);
             return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (Exception e) {
-            throw e;
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -64,8 +65,8 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@RequestParam String userName) throws RuntimeException {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                String requsterUsername = auth.getName();
-                userService.removeUser(userName, requsterUsername);
+            String requsterUsername = auth.getName();
+            userService.removeUser(userName, requsterUsername);
         } catch (Exception e) {
             throw e;
         }
@@ -96,28 +97,27 @@ public class UserController {
         return userService.refreshToken(req.getRemoteUser());
     }
 
-    @PostMapping("/update/{id}")
+    @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
     public ResponseEntity<User> updateUserById(@RequestBody PatchUser patchUser, @PathVariable long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         User user = userService.updateUserById(patchUser, id, username);
-        if(user == null) {
-            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        }
-        else {
+        if (user == null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } else {
             return new ResponseEntity<>(user, HttpStatus.OK);
         }
     }
-    @PostMapping("/update")
+
+    @PutMapping("/update")
     public ResponseEntity<User> updateUserSelf(@RequestBody PatchUser patchUser) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth.isAuthenticated()) {
+        if (auth.isAuthenticated()) {
             String username = auth.getName();
             User user = userService.updateUserSelf(patchUser, username);
-                return new ResponseEntity<>(user, HttpStatus.OK);
-        }
-        else {
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } else {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         }
     }

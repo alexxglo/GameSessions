@@ -25,9 +25,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -97,6 +99,7 @@ public class LoginTests {
 
         return request;
     }
+
     @Test
     public void testGoodFlowOnLogin() {
         User userMock = configureUserMock();
@@ -106,7 +109,7 @@ public class LoginTests {
         when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userMock.getUsername(), userMock.getPassword()))).thenReturn(auth);
 
 
-        assertThat(userMock.getEmail()).isSameAs(userService.login(userMock.getUsername(),userMock.getPassword()).getEmail());
+        assertThat(userMock.getEmail()).isSameAs(userService.login(userMock.getUsername(), userMock.getPassword()).getEmail());
     }
 
     @Test
@@ -179,7 +182,7 @@ public class LoginTests {
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
         when(userRepository.findByUsername(requesterUsername)).thenReturn(user);
 
-        userService.removeUser(user.getUsername(),requesterUsername);
+        userService.removeUser(user.getUsername(), requesterUsername);
 
     }
 
@@ -270,7 +273,7 @@ public class LoginTests {
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
         when(userRepository.saveAndFlush(any())).thenReturn(user);
 
-        assertThat(userService.updateUserById(patchUser,id,user.getUsername()).getEmail()).isEqualTo(user.getEmail());
+        assertThat(userService.updateUserById(patchUser, id, user.getUsername()).getEmail()).isEqualTo(user.getEmail());
     }
 
     @Test

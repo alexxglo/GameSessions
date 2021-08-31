@@ -30,7 +30,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NETWORK_AUTHENTICATION_REQUIRED);
     }
 
-    @ExceptionHandler(value ={OverAllocatedTimeException.class})
+    @ExceptionHandler(value = {OverAllocatedTimeException.class})
     protected ResponseEntity<Object> handleOvertime(
             RuntimeException ex, WebRequest request) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.CREATED);

@@ -9,7 +9,7 @@ public class UserDTO {
         this.email = email;
     }
 
-    public UserDTO(){
+    public UserDTO() {
 
     }
 

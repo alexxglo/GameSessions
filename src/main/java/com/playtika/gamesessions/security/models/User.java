@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.playtika.gamesessions.models.GameSession;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 @Entity
@@ -15,6 +17,7 @@ public class User {
     private long id;
 
     @Column(unique = true, nullable = false)
+    @NotBlank
     private String username;
 
     @Column(name = "first_name")
@@ -24,16 +27,18 @@ public class User {
     private String lastName;
 
     @Column(unique = true, nullable = false)
+    @Email
     private String email;
 
     @Column(name = "max_daily_time")
     private int maxDailyTime;
 
+    @NotBlank
     private String password;
 
 
     @JsonIgnore
-    @ManyToMany(fetch=FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false),

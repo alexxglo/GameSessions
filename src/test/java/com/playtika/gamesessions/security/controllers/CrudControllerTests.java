@@ -1,4 +1,5 @@
 package com.playtika.gamesessions.security.controllers;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -81,7 +82,7 @@ public class CrudControllerTests {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUserName("test");
         loginRequest.setPassword("email");
-        when(userService.login(anyString(),anyString())).thenReturn(loginResponse);
+        when(userService.login(anyString(), anyString())).thenReturn(loginResponse);
 
         mockMvc.perform(post("/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,15 +93,16 @@ public class CrudControllerTests {
 
     @Test
     public void usernameInvalidOnLoginTest() throws Exception {
-        when(userService.login(anyString(),anyString())).thenReturn(null);
+        when(userService.login(anyString(), anyString())).thenReturn(null);
         mockMvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(null)))
+                        .content(objectMapper.writeValueAsString(null)))
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof RuntimeException));
     }
+
     @Test
     public void unauthorizedDeleteUserTest() throws Exception {
         mockMvc.perform(delete("/delete")
-                .param("userName", "unauthorizedUser"))
+                        .param("userName", "unauthorizedUser"))
                 .andExpect(status().is4xxClientError());
     }
 
@@ -108,12 +110,12 @@ public class CrudControllerTests {
     public void notLoggedInUpdateUserSelfTest() throws Exception {
         when(auth.isAuthenticated()).thenReturn(true);
 
-        when(userService.updateUserSelf(any(),any())).thenReturn(null);
-        mockMvc.perform(post("/update")).andExpect(status().isForbidden());
+        when(userService.updateUserSelf(any(), any())).thenReturn(null);
+        mockMvc.perform(put("/update")).andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(roles="USER")
+    @WithMockUser(roles = "USER")
     public void unauthorizedUserGetRefreshTokenTest() throws Exception {
         mockMvc.perform(get("/refresh"))
                 .andExpect(status().isForbidden());
@@ -125,12 +127,12 @@ public class CrudControllerTests {
         when(userService.signUp(signUpRequest)).thenReturn(null);
         mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(signUpRequest)))
+                        .content(objectMapper.writeValueAsString(signUpRequest)))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(roles="ADMIN")
+    @WithMockUser(roles = "ADMIN")
     public void okDeleteTest() throws Exception {
         SecurityContextHolder securityContextHolder = mock(SecurityContextHolder.class);
         when(auth.getName()).thenReturn("mockedUser");
@@ -140,7 +142,7 @@ public class CrudControllerTests {
     }
 
     @Test
-    @WithMockUser(roles="MANAGER")
+    @WithMockUser(roles = "MANAGER")
     public void searchUserTest() throws Exception {
         UserDTO userResponse = new UserDTO();
         userResponse.setUserName("test");
@@ -149,14 +151,14 @@ public class CrudControllerTests {
     }
 
     @Test
-    @WithMockUser(roles="ADMIN")
+    @WithMockUser(roles = "ADMIN")
     public void getAllUsers() throws Exception {
         when(queryUserService.getAllUser(any())).thenThrow(new RuntimeException());
         mockMvc.perform(get("/users", pageable)).andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(roles="ADMIN")
+    @WithMockUser(roles = "ADMIN")
     public void refreshTokenTest() throws Exception {
         String refreshToken = "refresh";
         when(userService.refreshToken(any())).thenReturn(refreshToken);
@@ -164,7 +166,7 @@ public class CrudControllerTests {
     }
 
     @Test
-    @WithMockUser(roles="ADMIN")
+    @WithMockUser(roles = "ADMIN")
     public void updateUserByInexistentIdTest() throws Exception {
         PatchUser patchUser = new PatchUser();
         Authentication authentication = mock(Authentication.class);
@@ -179,16 +181,16 @@ public class CrudControllerTests {
         String username = "test";
         when(auth.getName()).thenReturn(username);
         when(userService.updateUserById(patchUser, testId, username)).thenReturn(user);
-        mockMvc.perform(post("/update/{id}", testId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(patchUser)))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/update/{id}", testId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchUser)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     public void updateOkUserSelfTest() throws Exception {
-       when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.isAuthenticated()).thenReturn(true);
         PatchUser patchUser = new PatchUser();
         patchUser.setUserName("testUsername");
         patchUser.setPassword("1234");
@@ -201,8 +203,8 @@ public class CrudControllerTests {
         Mockito.when(securityContext.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(securityContext);
         when(auth.isAuthenticated()).thenReturn(true);
-       when(userService.updateUserSelf(patchUser, username)).thenReturn(user);
-        mockMvc.perform(post("/update")
+        when(userService.updateUserSelf(patchUser, username)).thenReturn(user);
+        mockMvc.perform(put("/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(patchUser)))
                 .andExpect(status().isOk());
@@ -251,7 +253,7 @@ public class CrudControllerTests {
 
         when(queryUserService.getUsersAboveThresholdDailyTime(min, pageable)).thenReturn(users);
         mockMvc.perform(get("/", pageable)
-                .param("min", "3"))
+                        .param("min", "3"))
                 .andExpect(status().isOk())
                 .andExpect(result -> result.equals(users));
     }

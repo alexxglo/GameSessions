@@ -31,9 +31,6 @@ public class GameSessionQueriesService implements FilterInterface {
 
     @Autowired
     FilterService filterService;
-//
-//    @PersistenceContext
-//    private EntityManager em;
 
     @Autowired
     private EntityManagerService entityManagerService;

@@ -19,71 +19,69 @@ public class FilterService implements FilterInterface {
 
     private List<String> getExpression(String input, int index) {
         List<String> newExpressions = new ArrayList<>();
-        char nextSymbolChar = input.charAt(index+1);
+        char nextSymbolChar = input.charAt(index + 1);
         int currentWord = 0;
         String nextSymbol = String.valueOf(nextSymbolChar);
-        if("(".equals(nextSymbol)) {
+        if ("(".equals(nextSymbol)) {
             return null;
         }
-        for(int i = index+1; i < input.length(); i++) {
+        for (int i = index + 1; i < input.length(); i++) {
             nextSymbolChar = input.charAt(i);
             nextSymbol = String.valueOf(nextSymbolChar);
 
-            if(" ".equals(nextSymbol)) {
+            if (" ".equals(nextSymbol)) {
                 currentWord++;
-                List<String> cloneExpressions = new ArrayList<>(newExpressions.size()+1);
+                List<String> cloneExpressions = new ArrayList<>(newExpressions.size() + 1);
                 cloneExpressions.addAll(newExpressions);
                 newExpressions = new ArrayList<>();
                 newExpressions.addAll(cloneExpressions);
                 newExpressions.add("");
             }
-            if(")".equals(nextSymbol)) {
+            if (")".equals(nextSymbol)) {
                 return newExpressions;
-            }
-            else if(currentWord == 0 && i == index+1) {
+            } else if (currentWord == 0 && i == index + 1) {
                 newExpressions.add(nextSymbol);
-            }
-            else {
+            } else {
                 String newEx = newExpressions.get(currentWord);
                 newEx = newEx.concat(nextSymbol);
                 newExpressions.remove(currentWord);
                 newExpressions.add(newEx);
             }
         }
-        return null; }
+        return null;
+    }
 
     private String getOperator(String input, int j) {
         String operator = new String();
-        while(j < input.length() && input.charAt(j) != '(' && input.charAt(j) != ')') {
+        while (j < input.length() && input.charAt(j) != '(' && input.charAt(j) != ')') {
             operator = operator + input.charAt(j);
             j++;
         }
         return operator;
     }
 
-    public List<String> resolveQuery(String input){
-        if(input==null)
+    public List<String> resolveQuery(String input) {
+        if (input == null)
             return null;
         List<String> expressions = new ArrayList<>();
         Stack<Character> stack = new Stack<>();
         String operator = new String();
-        for (int i = 0; i <input.length() ; i++) {
+        for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
-            if(c=='('){
+            if (c == '(') {
                 expressions.add(String.valueOf(c));
-                if(getExpression(input, i) != null) {
-                    expressions.addAll(getExpression(input,i));
+                if (getExpression(input, i) != null) {
+                    expressions.addAll(getExpression(input, i));
                 }
                 stack.push(')');
-            }
-            else if (c==')'){
+            } else if (c == ')') {
                 expressions.add(String.valueOf(c));
-                int j = i+1;
+                int j = i + 1;
                 operator = getOperator(input, j);
-                if(!operator.equals("")) {
+                if (!operator.equals("")) {
                     expressions.add(operator);
                 }
-                if(stack.isEmpty() || stack.pop()!=c)
+                if (stack.isEmpty() || stack.pop() != c)
                     return null;
             }
         }
@@ -95,19 +93,15 @@ public class FilterService implements FilterInterface {
     }
 
     private String checkIfKeywordExists(String exp) {
-        if(" eq".equals(exp)) {
+        if (" eq".equals(exp)) {
             return "=";
-        }
-        else if(" ne".equals(exp)) {
+        } else if (" ne".equals(exp)) {
             return "!=";
-        }
-        else if(" gt".equals(exp)) {
+        } else if (" gt".equals(exp)) {
             return ">";
-        }
-        else if(" lt".equals(exp)) {
+        } else if (" lt".equals(exp)) {
             return "<";
-        }
-        else return null;
+        } else return null;
     }
 
     @Override

@@ -29,7 +29,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public PasswordEncoder encoder(){
+    public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder(11);
     }
 
@@ -61,7 +61,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/public/**")//
                 .and()
                 .ignoring()
-                .antMatchers("/api/players/public");;
+                .antMatchers("/api/players/public");
+        ;
     }
 
 }

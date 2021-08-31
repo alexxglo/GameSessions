@@ -124,8 +124,8 @@ public class GameSessionService {
         String dateConverted = dateToParse + " " + "00:00:00";
         Date date = df.parse(dateConverted);
         Optional<Integer> time = gameSessionRepository.getDurationOnDay(currentUser.getId(), date);
-        if(time.isPresent()) {
-        return String.format("You have played %d minutes on %s", time, date);
+        if (time.isPresent()) {
+            return String.format("You have played %d minutes on %s", time, date);
         }
         return String.format("You have not played any games on %s", date);
     }
@@ -139,11 +139,10 @@ public class GameSessionService {
         User currentUser = userRepository.findByUsername(username);
         Date date = new Date();
         Optional<Integer> time = gameSessionRepository.getDurationOnDay(currentUser.getId(), date);
-        if(time.isPresent()) {
-        String response = "Today you have played for " + time + " minutes";
-        return response;
-        }
-        else {
+        if (time.isPresent()) {
+            String response = "Today you have played for " + time + " minutes";
+            return response;
+        } else {
             String response = "Today you have not played any games";
             return response;
         }
