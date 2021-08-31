@@ -20,6 +20,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
@@ -122,7 +123,11 @@ public class GameSessionService {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         String dateConverted = dateToParse + " " + "00:00:00";
         Date date = df.parse(dateConverted);
-        return String.format("You have played %d minutes on %s", gameSessionRepository.getDurationOnDay(currentUser.getId(), date), date);
+        Optional<Integer> time = gameSessionRepository.getDurationOnDay(currentUser.getId(), date);
+        if(time.isPresent()) {
+        return String.format("You have played %d minutes on %s", time, date);
+        }
+        return String.format("You have not played any games on %s", date);
     }
 
 
@@ -133,8 +138,15 @@ public class GameSessionService {
 
         User currentUser = userRepository.findByUsername(username);
         Date date = new Date();
-        String response = "Today you have played for " + gameSessionRepository.getDurationOnDay(currentUser.getId(), date) + " minutes";
+        Optional<Integer> time = gameSessionRepository.getDurationOnDay(currentUser.getId(), date);
+        if(time.isPresent()) {
+        String response = "Today you have played for " + time + " minutes";
         return response;
+        }
+        else {
+            String response = "Today you have not played any games";
+            return response;
+        }
     }
 
     private long getDateDiff(Date startDate, Date endDate, TimeUnit timeUnit) {

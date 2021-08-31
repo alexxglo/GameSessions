@@ -90,6 +90,7 @@ public class UserService implements UserDetailsService {
             throw new MyCustomException("User already exists in system", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
+        int defaultDailyTime = 30;
         User user = new User();
         user.setUsername(request.getUserName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -97,6 +98,8 @@ public class UserService implements UserDetailsService {
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setRoles(initialUserRole());
+        user.setMaxDailyTime(request.getMaxDailyTime());
+        user.setMaxDailyTime(defaultDailyTime);
         request.setPassword(user.getPassword());
 
         userRepository.save(user);
@@ -143,6 +146,9 @@ public class UserService implements UserDetailsService {
             User requestUser = userRepository.findByUsername(username);
             if(verifyRoleLevel(userToUpdate, requestUser)) {
                 User userUpdated = updateUser(patchUser, userToUpdate);
+                if(patchUser.getRoles() != null) {
+                    userUpdated.setRoles(patchUser.getRoles());
+                }
                 try {
                     return userRepository.saveAndFlush(userUpdated);
                 } catch (Exception e) {
@@ -209,14 +215,13 @@ public class UserService implements UserDetailsService {
             userToUpdate.setEmail(patchUser.getEmail());
         }
         if(patchUser.getPassword() != null) {
-            userToUpdate.setPassword(patchUser.getPassword());
+            userToUpdate.setPassword(passwordEncoder.encode(patchUser.getPassword()));
         }
         if(patchUser.getUserName() != null) {
             userToUpdate.setUsername(patchUser.getUserName());
         }
-        if(patchUser.getRoles().size() >= 1) {
-            userToUpdate.setRoles(patchUser.getRoles());
-        }
+
         return userToUpdate;
     }
+
 }

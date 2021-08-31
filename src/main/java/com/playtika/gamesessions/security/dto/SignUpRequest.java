@@ -12,6 +12,7 @@ public class SignUpRequest {
     private String lastName;
     private String email;
     private String password;
+    private int maxDailyTime;
     private List<Role> roles;
 
     public String getUserName() {
@@ -60,5 +61,13 @@ public class SignUpRequest {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public int getMaxDailyTime() {
+        return maxDailyTime;
+    }
+
+    public void setMaxDailyTime(int maxDailyTime) {
+        this.maxDailyTime = maxDailyTime;
     }
 }
