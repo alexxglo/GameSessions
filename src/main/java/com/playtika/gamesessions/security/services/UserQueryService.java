@@ -49,5 +49,6 @@ public class UserQueryService {
                 .findFirst()
                 .orElseThrow(() -> new ArrayIndexOutOfBoundsException("No users found"));
     }
+
 }
 

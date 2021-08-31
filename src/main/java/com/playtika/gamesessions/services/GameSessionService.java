@@ -12,7 +12,6 @@ import com.playtika.gamesessions.security.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.naming.AuthenticationException;
@@ -21,7 +20,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
@@ -135,7 +133,8 @@ public class GameSessionService {
 
         User currentUser = userRepository.findByUsername(username);
         Date date = new Date();
-        return String.format("Today you have played for %d minutes", gameSessionRepository.getDurationOnDay(currentUser.getId(), date));
+        String response = "Today you have played for " + gameSessionRepository.getDurationOnDay(currentUser.getId(), date) + " minutes";
+        return response;
     }
 
     private long getDateDiff(Date startDate, Date endDate, TimeUnit timeUnit) {
@@ -231,7 +230,6 @@ public class GameSessionService {
                 .block();
         ObjectNode node = new ObjectMapper().readValue(gameDetails, ObjectNode.class);
         if (node.has("slug")) {
-            System.out.println(node.get("slug"));
             return node.get("slug").asText();
         }
         return null;

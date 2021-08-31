@@ -1,13 +1,21 @@
 package com.playtika.gamesessions.services;
 
+import com.playtika.gamesessions.models.FilterInterface;
+import com.playtika.gamesessions.models.GameSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
-public class FilterService {
+public class FilterService implements FilterInterface {
+
+    @Autowired
+    private GameSessionQueriesService gameSessionQueriesService;
 
     private List<String> getExpression(String input, int index) {
         List<String> newExpressions = new ArrayList<>();
@@ -53,18 +61,6 @@ public class FilterService {
         return operator;
     }
 
-    private List<String> trimExpressions(List<String> expressions) {
-        List<String> exCopy = new ArrayList<>();
-        for(String ex : expressions) {
-            if(ex.startsWith(" ")) {
-                exCopy.add(ex.substring(1));
-            }
-            else {
-                exCopy.add(ex);
-            }
-        }
-        return exCopy;
-    }
     public List<String> resolveQuery(String input){
         if(input==null)
             return null;
@@ -93,9 +89,52 @@ public class FilterService {
         }
 
         if (stack.isEmpty()) {
-//            return trimExpressions(expressions);
             return expressions;
         }
         return null;
+    }
+
+    private String checkIfKeywordExists(String exp) {
+        if(" eq".equals(exp)) {
+            return "=";
+        }
+        else if(" ne".equals(exp)) {
+            return "!=";
+        }
+        else if(" gt".equals(exp)) {
+            return ">";
+        }
+        else if(" lt".equals(exp)) {
+            return "<";
+        }
+        else return null;
+    }
+
+    @Override
+    public List<GameSession> getListFromFilterQuery(String query) {
+        List<String> expressionsFromInput;
+        List<String> safeExpressions = new ArrayList<>();
+        String regexedString = new String();
+        expressionsFromInput = resolveQuery(query);
+
+        String sqlQuery = new String();
+        Pattern pattern = Pattern.compile("[^;?\']");
+        for (String exp : expressionsFromInput) {
+            Matcher matcher = pattern.matcher(exp);
+            while (matcher.find()) {
+                regexedString = regexedString + matcher.group();
+            }
+            safeExpressions.add(regexedString);
+            regexedString = new String();
+        }
+        for (String exp : safeExpressions) {
+            String translatedOperation = checkIfKeywordExists(exp);
+            if (translatedOperation != null) {
+                sqlQuery = sqlQuery.concat(translatedOperation);
+            } else {
+                sqlQuery = sqlQuery.concat(exp);
+            }
+        }
+        return gameSessionQueriesService.getListFromFilterQuery(sqlQuery);
     }
 }

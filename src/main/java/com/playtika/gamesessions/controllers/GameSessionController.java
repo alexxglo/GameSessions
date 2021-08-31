@@ -3,6 +3,7 @@ package com.playtika.gamesessions.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.playtika.gamesessions.dto.SessionDTO;
 import com.playtika.gamesessions.models.GameSession;
+import com.playtika.gamesessions.services.FilterService;
 import com.playtika.gamesessions.services.GameSessionQueriesService;
 import com.playtika.gamesessions.services.GameSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class GameSessionController {
 
     @Autowired
     GameSessionQueriesService queriesService;
+
+    @Autowired
+    FilterService filterService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -109,6 +113,6 @@ public class GameSessionController {
     @GetMapping(value = "/custom", params = {"query"})
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public List<GameSession> getListFromSqlQuery(@RequestParam String query) {
-        return queriesService.getListFromSqlQuery(query);
+        return filterService.getListFromFilterQuery(query);
     }
 }

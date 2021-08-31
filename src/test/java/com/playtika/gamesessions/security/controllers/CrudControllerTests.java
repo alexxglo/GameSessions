@@ -1,41 +1,37 @@
 package com.playtika.gamesessions.security.controllers;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.playtika.gamesessions.exceptions.MyCustomException;
 import com.playtika.gamesessions.security.dto.*;
 import com.playtika.gamesessions.security.models.User;
 import com.playtika.gamesessions.security.repositories.RoleRepository;
 import com.playtika.gamesessions.security.services.JwtTokenService;
 import com.playtika.gamesessions.security.services.UserQueryService;
 import com.playtika.gamesessions.security.services.UserService;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static org.hamcrest.Matchers.containsString;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.Assert.*;
 
@@ -62,6 +58,12 @@ public class CrudControllerTests {
 
     @MockBean
     private UserQueryService queryUserService;
+
+    @Mock
+    private Pageable pageable;
+
+    @Mock
+    private User mockedUser;
 
     @Test
     public void noInputLoginTest() throws Exception {
@@ -127,21 +129,6 @@ public class CrudControllerTests {
                 .andExpect(status().isOk());
     }
 
-//    @Test
-//    public void illegalCredentialsForSignUp() throws Exception {
-//        SignUpRequest signUpRequest = new SignUpRequest();
-//        signUpRequest.setUserName("hello");
-//        signUpRequest.setPassword("1234");
-//        signUpRequest.setEmail("12341@1241");
-//        MyCustomException e = new MyCustomException("whatever", HttpStatus.UNAUTHORIZED);
-//        when(userService.signUp(signUpRequest))
-//                .thenThrow(e);
-//        mockMvc.perform(post("/register")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(signUpRequest)))
-//                        .andExpect(result -> assertTrue(result.getResolvedException() instanceof RuntimeException));
-//    }
-
     @Test
     @WithMockUser(roles="ADMIN")
     public void okDeleteTest() throws Exception {
@@ -164,9 +151,8 @@ public class CrudControllerTests {
     @Test
     @WithMockUser(roles="ADMIN")
     public void getAllUsers() throws Exception {
-        Pageable pageable = mock(Pageable.class);
-        when(queryUserService.getAllUser(pageable)).thenThrow(new RuntimeException());
-        mockMvc.perform(get("/users")).andExpect(status().isNotFound());
+        when(queryUserService.getAllUser(any())).thenThrow(new RuntimeException());
+        mockMvc.perform(get("/users", pageable)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -181,7 +167,10 @@ public class CrudControllerTests {
     @WithMockUser(roles="ADMIN")
     public void updateUserByInexistentIdTest() throws Exception {
         PatchUser patchUser = new PatchUser();
-        SecurityContextHolder securityContextHolder = mock(SecurityContextHolder.class);
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
         patchUser.setUserName("testUsername");
         patchUser.setPassword("1234");
         patchUser.setEmail("test@test.com");
@@ -196,27 +185,8 @@ public class CrudControllerTests {
                 .andExpect(status().isUnauthorized());
     }
 
-//    @Test
-//    @WithMockUser(roles="ADMIN")
-//    public void updateUserByExistentIdTest() throws Exception {
-//        PatchUser patchUser = new PatchUser();
-//        SecurityContextHolder securityContextHolder = mock(SecurityContextHolder.class);
-//        patchUser.setUserName("testUsername");
-//        patchUser.setPassword("1234");
-//        patchUser.setEmail("test@test.com");
-//        User user = new User();
-//        user.setUsername(patchUser.getUserName());
-//        long testId = 5;
-//        String username = "test";
-//        when(auth.getName()).thenReturn(username);
-//        when(userService.updateUserById(patchUser, testId, username)).thenReturn(user);
-//        mockMvc.perform(post("/update/{id}", testId)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(patchUser)))
-//                .andExpect(status().isOk());
-//    }
-
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void updateOkUserSelfTest() throws Exception {
        when(auth.isAuthenticated()).thenReturn(true);
         PatchUser patchUser = new PatchUser();
@@ -236,5 +206,93 @@ public class CrudControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(patchUser)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void updatePlaytimeTest() throws Exception {
+        int playtime = 1;
+        User mockUser = mock(User.class);
+        when(mockUser.getMaxDailyTime()).thenReturn(playtime);
+        when(auth.getName()).thenReturn("name");
+        when(userService.updatePlaytime(playtime, auth.getName())).thenReturn(mockUser);
+        mockMvc.perform(get("/settings").param("maxPlaytime", "1"))
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(mockUser));
+
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void getUserByExistentIdTest() throws Exception {
+        long id = 1;
+        when(queryUserService.getUserById(id)).thenReturn(mockedUser);
+        mockMvc.perform(get("/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(mockedUser));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void getUserByInexistentIdTest() throws Exception {
+        long id = 1;
+        when(queryUserService.getUserById(id)).thenThrow(new IllegalArgumentException());
+        mockMvc.perform(get("/{id}", id))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof IllegalArgumentException));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void getUsersAboveThresholdDailyTimeTest() throws Exception {
+        int min = 3;
+        List<User> users = new ArrayList<>();
+        users.add(mockedUser);
+
+        when(queryUserService.getUsersAboveThresholdDailyTime(min, pageable)).thenReturn(users);
+        mockMvc.perform(get("/", pageable)
+                .param("min", "3"))
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(users));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void getHighestDailyTimeUserTest() throws Exception {
+
+        when(queryUserService.getHighestDailyTimeUser()).thenReturn(mockedUser);
+        mockMvc.perform(get("/highest/time"))
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(mockedUser));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void noUserGetHighestDailyTimeUserTest() throws Exception {
+
+        when(queryUserService.getHighestDailyTimeUser()).thenThrow(new ArrayIndexOutOfBoundsException());
+        mockMvc.perform(get("/highest/time"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ArrayIndexOutOfBoundsException));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void getLowestDailyTimeUserTest() throws Exception {
+
+        when(queryUserService.getLowestDailyTimeUser()).thenReturn(mockedUser);
+        mockMvc.perform(get("/lowest/time"))
+                .andExpect(status().isOk())
+                .andExpect(result -> result.equals(mockedUser));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void noUserGetLowestDailyTimeUserTest() throws Exception {
+
+        when(queryUserService.getLowestDailyTimeUser()).thenThrow(new ArrayIndexOutOfBoundsException());
+        mockMvc.perform(get("/lowest/time"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ArrayIndexOutOfBoundsException));
     }
 }

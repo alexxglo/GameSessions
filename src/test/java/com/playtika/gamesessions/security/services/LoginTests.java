@@ -17,6 +17,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,17 +49,12 @@ public class LoginTests {
     @MockBean
     private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockBean
     private RoleRepository roleRepository;
 
     @MockBean
     private UserRepository userRepository;
-
-    @Mock
-    private LoginResponse loginResponse;
 
     @Autowired
     private UserQueryService queryUserService;
@@ -66,6 +63,8 @@ public class LoginTests {
 
     private SignUpRequest requestMockNoData = mock(SignUpRequest.class);
 
+    @Mock
+    private Pageable pageable;
 
     public User configureUserMock() {
         User mockedUser = mock(User.class);
@@ -100,14 +99,13 @@ public class LoginTests {
     }
     @Test
     public void testGoodFlowOnLogin() {
-        //GIVEN
         User userMock = configureUserMock();
-        //WHEN
+
         when(userRepository.findByUsername(userMock.getUsername())).thenReturn(userMock);
         when(jwtTokenService.createToken(userMock.getUsername(), userMock.getRoles())).thenReturn("OK");
         when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userMock.getUsername(), userMock.getPassword()))).thenReturn(auth);
 
-        //THEN
+
         assertThat(userMock.getEmail()).isSameAs(userService.login(userMock.getUsername(),userMock.getPassword()).getEmail());
     }
 
@@ -168,22 +166,15 @@ public class LoginTests {
 
     @Test
     public void goodFlowRemoveUserTest() {
-//        User user = new User();
-//        user.setUsername("test");
-//        user.setPassword("testpwd");
-//        user.setEmail("email");
         Role role;
         List<Role> roles = new ArrayList<>();
         role = new Role();
         role.setName("ROLE_ADMIN");
         roles.add(role);
-//        user.setRoles(roles);
         String requesterUsername = "req";
-//
+
         User user = configureUserMock();
         when(user.getRoles()).thenReturn(roles);
-//        when(user.getRoles().get(0)).thenReturn();
-        when(user.getRoles().get(0).getName()).thenReturn(roles.get(0).getName());
         when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
         when(userRepository.findByUsername(requesterUsername)).thenReturn(user);
@@ -215,8 +206,8 @@ public class LoginTests {
         User user = configureUserMock();
         List<User> userList = new ArrayList<>();
         userList.add(user);
-        when(userRepository.findAll()).thenReturn(userList);
-        Pageable pageable = mock(Pageable.class);
+        Page<User> pageUserList = new PageImpl<>(userList);
+        when(userRepository.findAll(pageable)).thenReturn(pageUserList);
         assertThat(queryUserService.getAllUser(pageable)).isEqualTo(userList);
     }
 
@@ -261,7 +252,6 @@ public class LoginTests {
     }
 
     @Test
-
     public void updateUserByIdTest() {
         User user = configureUserMock();
         PatchUser patchUser = mock(PatchUser.class);
@@ -281,5 +271,21 @@ public class LoginTests {
         when(userRepository.saveAndFlush(any())).thenReturn(user);
 
         assertThat(userService.updateUserById(patchUser,id,user.getUsername()).getEmail()).isEqualTo(user.getEmail());
+    }
+
+    @Test
+    public void maxPlaytimeInvalidUpdatePlaytimeTest() {
+        int maxPlaytime = -3;
+        User user = configureUserMock();
+        assertThatThrownBy(() -> userService.updatePlaytime(maxPlaytime, user.getUsername())).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void goodFlowUpdatePlaytimeTest() {
+        int maxPlaytime = 3;
+        User user = configureUserMock();
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
+        when(userRepository.saveAndFlush(user)).thenReturn(user);
+        assertThat(userService.updatePlaytime(maxPlaytime, user.getUsername()).getUsername()).isEqualTo(user.getUsername());
     }
 }
