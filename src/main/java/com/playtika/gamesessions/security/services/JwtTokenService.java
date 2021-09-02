@@ -27,7 +27,7 @@ public class JwtTokenService {
 
     private String secretKey = "MY_SECRET_KEY";
 
-    private long validityInMilliseconds = 360000; // 1h
+    private long validityInMilliseconds = 360000; // many hours
 
     @Autowired
     private UserService userService;
