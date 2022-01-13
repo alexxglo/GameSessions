@@ -1,7 +1,5 @@
 # GameSessions
 
-# GameSessions
-
 <b><h3> Scopul </h3></b>
 
 Scopul principal al aplicatiei este sa ofere o solutie de manageriere a jocurilor video. Utilizatorii isi pot contoriza timpul petrecut in jocurile video, isi pot pune un timp maxim pe care il pot juca zilnic. Isi pot vedea timpul total petrecut in jocuri si pot posta review-uri.
